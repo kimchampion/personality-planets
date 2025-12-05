@@ -204,7 +204,7 @@ function getHoveredPlanet() {
 
 function mousePressed() {
   const p = getHoveredPlanet();
-  if (p && p.link) window.open(p.link, '_blank', 'noopener,noreferrer');
+  if (p && p.link) window.open(p.link, '_self', 'noopener,noreferrer');
 }
 
 
