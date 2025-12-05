@@ -208,30 +208,36 @@ function mousePressed() {
 
 function openPopupFor(idx) {
   if (idx < 0 || idx >= cubes.length) return;
-  let c = cubes[idx];
 
-  if (selectedSound && selectedSound.isPlaying()) {
-    selectedSound.stop();
-  }
+  stopAllObjectSounds();
+  
+  let c = cubes[idx];
 
   selectedImg = c.img;
   selectedSound = c.snd;
 
+  // if (selectedSound && selectedSound.isPlaying()) {
+  //   selectedSound.stop();
+  // }
+
+
   if (selectedSound) {
-    // selectedSound.loop(); // use loop if you want it to continue until closed
- 
-    selectedSound.onended(function () {
-      closePopupFromSound();
+    let thisSound = selectedSound;
+    let thisImg = selectedImg;
+
+    thisSound.stop();
+    thisSound.onended(function() {
+      if (selectedSound === thisSound && selectedImg === thisImg) {
+        closePopupFromSound();
+      }
     });
-    
-    selectedSound.play();
+
+    thisSound.play();
   }
 }
 
 function closePopup() {
-  if (selectedSound && selectedSound.isPlaying()) {
-    selectedSound.stop();
-  }
+  stopAllObjectSounds();
   selectedSound = null;
   selectedImg = null;
 }
@@ -417,4 +423,13 @@ function drawInfoBox() {
 
 function redirect(){
   window.location.href = "https://kimchampion.github.io/personality-planets/";
+}
+
+function stopAllObjectSounds() {
+  let all = [sndObj0, sndObj1, sndObj2, sndObj3, sndObj4, sndObj5, sndObj6];
+  for (let s of all) {
+    if (s && s.isPlaying()) {
+      s.stop();
+    }
+  }
 }
