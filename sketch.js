@@ -19,7 +19,7 @@ const PLANET_NAMES = [
 ];
 
 const PLANET_LINKS = [
-  "https://www.csueastbay.edu/", // gold
+  "kims-planet.html", // gold
   "https://www.csueastbay.edu/", // orange
   "https://www.sampyle.com/" // blue
 ];
