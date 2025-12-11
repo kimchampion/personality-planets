@@ -7,7 +7,12 @@ let customFont;
 let stickyShader;
 let warpAmount = 0.0;      // current strength
 let targetWarp = 0.0;      // target strength based on mouse press
-let lastMouse = { x: 0.5, y: 0.5 }; // last mouse position in [0,1] UV space
+let lastMouse = { x: 0.5, y: 0.5 }; // mouse in UV space (0–1)
+
+// ---------- DRAG STATE FOR PLANETS ----------
+let dragPlanet = null;
+let dragStart = null;
+const DRAG_THRESHOLD = 15; // pixels
 
 // ----- SHADER SOURCE (p5 + WebGL ONLY) -----
 const vertSrc = `
@@ -44,7 +49,7 @@ void main() {
   vec2 dir = uMouse - uv;
   float dist = length(dir);
 
-  // how far the "sticky" region extends (bigger = larger influence)
+  // how far the "sticky" region extends
   float radius = 0.5;
 
   // smooth falloff: 1 near mouse, 0 outside radius
@@ -118,7 +123,7 @@ function setup() {
   setupFixedPlanets();
 }
 
-
+// ---------- DRAW LOOP ----------
 function draw() {
   background(0);
 
@@ -127,7 +132,7 @@ function draw() {
     // mouse in UV (0–1). flip Y for texture coords.
     lastMouse.x = constrain(mouseX / width, 0.0, 1.0);
     lastMouse.y = constrain(1.0 - mouseY / height, 0.0, 1.0);
-    targetWarp = 0.5; // how strong the warp feels when pressed
+    targetWarp = 0.35; // how strong the warp feels when pressed
   } else {
     targetWarp = 0.0;
   }
@@ -135,7 +140,7 @@ function draw() {
   // smooth interpolation of warpAmount for a soft animation
   warpAmount = lerp(warpAmount, targetWarp, 0.12);
 
-  
+  // BACKGROUND LAYERS
   drawStars();            // behind everything
   drawWarpedBackground(); // astronaut / ground image with sticky warp
 
@@ -158,6 +163,7 @@ function draw() {
   }
 
   drawTitle();
+  drawHelpText();
 }
 
 // ---------- WINDOW RESIZE ----------
@@ -242,16 +248,21 @@ function setupFixedPlanets() {
     const a = PLANET_ANCHORS[i % PLANET_ANCHORS.length];
     const sizePx = minDim * a.size;
 
+    const baseX = a.fx * width;
+    const baseY = a.fy * height;
+
     planets.push({
       img: planetImgs[i],
       name: PLANET_NAMES[i] || "Planet",
       link: PLANET_LINKS[i] || null,
       fx: a.fx,
       fy: a.fy,
+      baseCx: baseX,   // original anchor position
+      baseCy: baseY,
+      cx: baseX,       // current (possibly warped) position
+      cy: baseY,
       w: sizePx,
       h: sizePx,
-      cx: a.fx * width,
-      cy: a.fy * height,
       alpha: a.alpha
     });
   }
@@ -262,23 +273,63 @@ function drawPlanets() {
   resetMatrix();
   imageMode(CENTER);
 
-  for (let p of planets) {
-    tint(255, p.alpha);
-    image(p.img, p.cx, p.cy, p.w, p.h);
-  }
-  noTint();
+  const mx = mouseX - width / 2;
+  const my = mouseY - height / 2;
+  const radius = min(width, height) * 0.7; // influence radius
 
+  for (let p of planets) {
+    // sticky offset toward the mouse, reusing warpAmount
+    let baseX = p.baseCx;
+    let baseY = p.baseCy;
+
+    let dx = mx - baseX;
+    let dy = my - baseY;
+    let distToMouse = sqrt(dx * dx + dy * dy);
+
+    let influence = 0.0;
+    if (mouseIsPressed) {
+      influence = constrain(1.0 - distToMouse / radius, 0.0, 1.0);
+    }
+
+    let strength = warpAmount * 1.3;
+    let offsetX = dx * influence * strength;
+    let offsetY = dy * influence * strength;
+
+    // if this is the one being dragged, exaggerate a bit
+    if (dragPlanet === p && mouseIsPressed) {
+      offsetX *= 1.4;
+      offsetY *= 1.4;
+    }
+
+    const drawX = baseX + offsetX;
+    const drawY = baseY + offsetY;
+
+    // store the live position for hover/tooltip detection
+    p.cx = drawX;
+    p.cy = drawY;
+
+    tint(255, p.alpha);
+    image(p.img, drawX, drawY, p.w, p.h);
+  }
+
+  noTint();
   pop();
 }
 
 function resizeFixedPlanets() {
   const minDim = min(width, height);
-  for (let p of planets) {
-    const idx = planets.indexOf(p) % PLANET_ANCHORS.length;
-    p.w = minDim * PLANET_ANCHORS[idx].size;
+  for (let i = 0; i < planets.length; i++) {
+    const p = planets[i];
+    const anchor = PLANET_ANCHORS[i % PLANET_ANCHORS.length];
+    p.w = minDim * anchor.size;
     p.h = p.w;
-    p.cx = p.fx * width;
-    p.cy = p.fy * height;
+
+    const baseX = anchor.fx * width;
+    const baseY = anchor.fy * height;
+    p.baseCx = baseX;
+    p.baseCy = baseY;
+    p.cx = baseX;
+    p.cy = baseY;
   }
 }
 
@@ -296,11 +347,22 @@ function getHoveredPlanet() {
   return null;
 }
 
+// start of a potential drag
 function mousePressed() {
-  const p = getHoveredPlanet();
-  if (p && p.link) {
-    window.open(p.link, "_self", "noopener,noreferrer");
+  dragPlanet = getHoveredPlanet();
+  dragStart = { x: mouseX, y: mouseY };
+}
+
+// open link only if click+dragged far enough
+function mouseReleased() {
+  if (dragPlanet && dragPlanet.link && dragStart) {
+    const d = dist(mouseX, mouseY, dragStart.x, dragStart.y);
+    if (d >= DRAG_THRESHOLD) {
+      window.open(dragPlanet.link, "_self", "noopener,noreferrer");
+    }
   }
+  dragPlanet = null;
+  dragStart = null;
 }
 
 // ---------- TOOLTIP ----------
@@ -351,6 +413,23 @@ function drawTitle() {
 
   fill(255);
   text(label, 0, -height / 2 + margin + 4);
+
+  pop();
+}
+
+// ---------- HELP TEXT ----------
+function drawHelpText() {
+  push();
+  resetMatrix();
+  textFont(customFont);
+  textAlign(CENTER, BOTTOM);
+
+  const size = max(12, min(width, height) * 0.018);
+  textSize(size);
+  fill(255, 180);
+
+  const msg = "Tip: click and drag a planet to open its link";
+  text(msg, 0, height / 2 - 20);
 
   pop();
 }
