@@ -389,17 +389,37 @@ function mousePressed() {
   dragStart = { x: mouseX, y: mouseY };
 }
 
-// open link only if click+dragged far enough
+// // open link only if click+dragged far enough
 function mouseReleased() {
   if (dragPlanet && dragPlanet.link && dragStart) {
     const d = dist(mouseX, mouseY, dragStart.x, dragStart.y);
     if (d >= DRAG_THRESHOLD) {
-      window.open(dragPlanet.link, "_self", "noopener,noreferrer");
+      // More mobile-friendly navigation
+      window.location.href = dragPlanet.link;
     }
   }
   dragPlanet = null;
   dragStart = null;
 }
+
+// touch support for mobile devices
+function touchStarted() {
+  // Reuse mousePressed logic
+  mousePressed();
+  return false; // prevent default scrolling while touching
+}
+
+function touchEnded() {
+  // Reuse mouseReleased logic
+  mouseReleased();
+  return false;
+}
+
+function touchMoved() {
+  // Prevent page from scrolling when dragging across the canvas
+  return false;
+}
+
 
 // ---------- TOOLTIP ----------
 function drawTooltip(p) {
@@ -490,3 +510,4 @@ function drawHelpText() {
 
   pop();
 }
+
