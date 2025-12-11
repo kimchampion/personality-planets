@@ -1,31 +1,30 @@
-// -------------------------
+
 // GLOBALS
-// -------------------------
 let angleX = 0;
 let angleY = 0;
 
 let isDragging = false;
 let previousMouseX = 0;
 let previousMouseY = 0;
-
-let zoom = 0; // camera zoom amount
+// camera zoom 
+let zoom = 0; 
 
 // starfield data
-let stars = [];            // moving stars
-let staticStars = [];      // unmoving background stars
+let stars = [];          
+let staticStars = [];      
 
 // shooting stars data
 let shootingStars = [];
 let shootingStarChance = 0.01;
 let maxShootingStars = 3;
 
-// moon parameters
+// moon 
 let moonAngle = 0;
 let moonDistance = 300;
 let moonSize = 50;
 let moonSpeed = 0.01;
 
-// planet size (will be adapted to window)
+// planet size 
 let planetRadius = 150;
 
 // planet self-rotation
@@ -35,22 +34,18 @@ let planetRotation = 0;
 let planetTexture;
 let moonTexture;
 
-// astronaut image
+// astronaut float
 let astronautImg;
 
-// CUSTOM FONT
+// font
 let spaceFont;
 
-// Back button
+// Back btn
 let backButton;
 
-// track whether mouse is hovering the main planet
+// hovering planet
 let planetHovered = false;
 
-
-// -------------------------
-// PRELOAD
-// -------------------------
 function preload() {
   planetTexture = loadImage("assets/planet-samB3.jpg");
   moonTexture   = loadImage("assets/planet-samR.jpg");
@@ -58,16 +53,12 @@ function preload() {
   spaceFont     = loadFont("SPACE.ttf");
 }
 
-
-// -------------------------
-// SETUP
-// -------------------------
 function setup() {
   createCanvas(windowWidth, windowHeight, WEBGL);
   smooth();
   updateSizesForWindow();
 
-  // Create Back button
+  // Back btn
   backButton = createButton("Back");
   backButton.position(20, 20);                  
   backButton.style("padding", "10px 22px");
@@ -79,9 +70,9 @@ function setup() {
   backButton.style("cursor", "pointer");
   backButton.style("z-index", "9999");
   backButton.style("transition", "all 0.2s ease");
-  backButton.style("font-family", "spaceFont"); // CSS family name, optional
+  backButton.style("font-family", "spaceFont"); 
 
-  // Hover effect for Back button
+  // Hover effect 
   backButton.mouseOver(() => {
     backButton.style("background", "#444");
     backButton.style("transform", "scale(1.1)");
@@ -94,13 +85,13 @@ function setup() {
     backButton.style("border", "2px solid #555");
   });
 
-  // Button link action
+  // Button link 
   backButton.mousePressed(() => {
     //window.location.href = "https://sampyle01.github.io/Personality-Planets-Landing-Page/";
     window.location.href = "./";
 });
 
-  // Moving starfield
+  // Moving stars
   for (let i = 0; i < 400; i++) {
     stars.push({
       x: random(-2000, 2000),
@@ -109,7 +100,7 @@ function setup() {
     });
   }
 
-  // Static background stars
+  // Static stars
   for (let i = 0; i < 600; i++) {
     staticStars.push({
       x: random(-3000, 3000),
@@ -119,10 +110,6 @@ function setup() {
   }
 }
 
-
-// -------------------------
-// DRAW
-// -------------------------
 function draw() {
   background(5, 8, 20);
 
@@ -134,10 +121,7 @@ function draw() {
   rotateX(angleX);
   rotateY(angleY);
 
-
-  // -------------------------
-  // STATIC STARFIELD
-  // -------------------------
+  // STATIC STARS
   push();
   noStroke();
   noLights();
@@ -151,10 +135,7 @@ function draw() {
   }
   pop();
 
-
-  // -------------------------
-  // MOVING STARFIELD
-  // -------------------------
+  // MOVING STARS
   push();
   noStroke();
   noLights();
@@ -176,9 +157,7 @@ function draw() {
   pop();
 
 
-  // -------------------------
   // SHOOTING STARS
-  // -------------------------
   if (random() < shootingStarChance && shootingStars.length < maxShootingStars) {
     const startX = random(500, 2000);
     const startY = random(-1000, -200);
@@ -224,7 +203,7 @@ function draw() {
     line(0, 0, 0, -sh.vx * 2.0, -sh.vy * 2.0, -sh.vz * 2.0);
     pop();
 
-    // bright glowing head
+    // glowing head star
     push();
     noStroke();
     fill(255, 255, 180, alpha * 1.4);
@@ -235,17 +214,12 @@ function draw() {
   pop();
 
 
-  // -------------------------
   // LIGHTS
-  // -------------------------
   ambientLight(60, 60, 80);
   directionalLight(255, 255, 255, -0.5, -1, -0.5);
   pointLight(150, 150, 255, 200, -200, 300);
 
-
-  // -------------------------
   // PLANET (SPINNING)
-// -------------------------
   push();
   rotateY(planetRotation);
   noStroke();
@@ -253,14 +227,12 @@ function draw() {
   sphere(planetRadius, 64, 64);
   pop();
 
-  // -------------------------
   // HOVER DETECTION FOR PLANET (ZOOM-AWARE)
-// -------------------------
   let dx = mouseX - width / 2;
   let dy = mouseY - height / 2;
   let distToCenter = sqrt(dx * dx + dy * dy);
 
-  // approximate scaling of hit radius based on zoom
+  // hit radius based on zoom
   let zoomScale = 1 / (1 - zoom / 1000);
   zoomScale = constrain(zoomScale, 0.3, 3.0);
 
@@ -268,16 +240,14 @@ function draw() {
   planetHovered = distToCenter < hoverRadius;
 
 
-  // -------------------------
-  // FLOATING ASTRONAUT
-  // -------------------------
+  // ASTRONAUT
   push();
   let bobOffset = sin(frameCount * 0.02) * 20;
 
   translate(
     0,
-    -planetRadius * 3.2 + bobOffset,
-    -planetRadius * 0.8
+    -planetRadius * 2.5 + bobOffset,
+    -planetRadius * 0.25
   );
 
   rotateY(-angleY);
@@ -291,9 +261,7 @@ function draw() {
   pop();
 
 
-  // -------------------------
-  // MOON ORBIT
-  // -------------------------
+  // MOON 
   moonAngle += moonSpeed;
 
   push();
@@ -305,21 +273,19 @@ function draw() {
   pop();
 
 
-  pop(); // END SCENE (3D stuff finished)
+  pop(); 
 
 
-  // -------------------------
-  // 2D OVERLAY LAYER
-  // -------------------------
-  resetMatrix(); // back to normal 2D coordinate system
+  // 2D OVERLAY FOR TEXT
+  resetMatrix(); 
 
   // TOOLTIP for planet hover
-  if (planetHovered && !isDragging) {                 // CHANGED: only when not dragging
+  if (planetHovered && !isDragging) {                
     // ensure tooltip draws in front of all 3D objects
-    drawingContext.disable(drawingContext.DEPTH_TEST); // NEW
+    drawingContext.disable(drawingContext.DEPTH_TEST); 
 
     push();
-    // position tooltip near mouse
+    //tooltip near mouse
     let tooltipX = mouseX + 15;
     let tooltipY = mouseY - 40;
 
@@ -346,7 +312,7 @@ function draw() {
 
     pop();
 
-    drawingContext.enable(drawingContext.DEPTH_TEST);  // NEW
+    drawingContext.enable(drawingContext.DEPTH_TEST); 
   }
 
   // Existing UI text
@@ -359,10 +325,7 @@ function draw() {
 }
 
 
-
-// -------------------------
-// INTERACTION HANDLERS
-// -------------------------
+// INTERACTION MOVEMENTS
 function mousePressed() {
   isDragging = true;
   previousMouseX = mouseX;
