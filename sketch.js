@@ -417,7 +417,7 @@ function drawTitle() {
   pop();
 }
 
-// ---------- HELP TEXT ----------
+// helptext
 function drawHelpText() {
   push();
   resetMatrix();
@@ -426,10 +426,31 @@ function drawHelpText() {
 
   const size = max(12, min(width, height) * 0.018);
   textSize(size);
-  fill(255, 180);
 
   const msg = "Tip: click and drag a planet to open its link";
-  text(msg, 0, height / 2 - 20);
+
+  let x = 0;
+  let y = height / 2 - 20;
+
+  // ---- OUTLINE (fake stroke) ----
+  fill(0, 180); // black glow
+  noStroke();
+
+  const o = 2; // outline offset
+  text(msg, x - o, y);
+  text(msg, x + o, y);
+  text(msg, x, y - o);
+  text(msg, x, y + o);
+
+  // corners (so it's smoother)
+  text(msg, x - o, y - o);
+  text(msg, x + o, y - o);
+  text(msg, x - o, y + o);
+  text(msg, x + o, y + o);
+
+  // ---- MAIN TEXT ----
+  fill(255);
+  text(msg, x, y);
 
   pop();
 }
