@@ -1,1 +1,1 @@
-# Personality-Planets-Landing-Page
+# Personality Planets
