@@ -19,7 +19,8 @@ let planetTexture, planetTexture1, planetTexture2, planetTexture3;
 
 function preload() {
 
-  uiFont = loadFont("assets/Arial.ttf"); 
+  uiFont        = loadFont("assets/Arial.ttf");
+  spaceFont     = loadFont("SPACE.ttf"); 
 
   planetTexture = loadImage("assets/planet-kim1.jpg"); 
   planetTexture1 = loadImage("assets/planet-kim2.jpg"); 
@@ -363,11 +364,10 @@ function drawInfoBox() {
     "A Galaxy of memories orbiting around",
     "like planets and stars. Each memory ",
     "has its own place in my personal universe",
-    "------------------------------------",
-    "- Click a cube to open a memory",
-    "- Arrow keys, W, A, and SPACE open them also",
-    "- M toggles background music",
-    "- Click empty space to close popup", 
+    "\n",
+    "Click a cube to open a memory",
+    "Arrow keys, W, A, and SPACE open them also",
+    "Click empty space to close popup", 
   ];
 
   push();
@@ -376,7 +376,7 @@ function drawInfoBox() {
 
   // Responsive sizes based on window
   let base = min(width, height);
-  let pad   = base * 0.02;       
+  let pad   = base * 0.025;       
   let winW  = width  * 0.3;
                 
   //let winH  = height * 0.27;   
@@ -403,10 +403,12 @@ function drawInfoBox() {
   let textX = x + pad;
   let textY = y+ pad;
 
-  textSize(base * 0.025);
-  text("My Personality Planet: Family", textX, textY);
+  textSize(base * 0.03);
+  textFont(spaceFont);
+  text("Family Planet", textX, textY);
 
   textSize(base * 0.02);
+  textFont(uiFont);
   textY = textY + 30;
 
   for (let i = 0; i < infoLines.length; i++) {
