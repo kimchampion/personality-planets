@@ -1,5 +1,8 @@
 // ---------- IMAGES / FONT ----------
 let bgImg;
+let bgDrawW = 0;
+let bgDrawH = 0;
+
 let planetImgs = [];
 let customFont;
 
@@ -36,8 +39,7 @@ const fragSrc = `
 precision mediump float;
 
 uniform sampler2D uTex;
-uniform vec2 uResolution;
-uniform vec2 uMouse;     // mouse in UV (0–1), y flipped
+uniform vec2 uMouse;     // mouse in UV (0–1)
 uniform float uStrength; // warp strength
 
 varying vec2 vTexCoord;
@@ -51,8 +53,6 @@ void main() {
 
   // how far the "sticky" region extends
   float radius = 0.5;
-
-  // smooth falloff: 1 near mouse, 0 outside radius
   float influence = smoothstep(radius, 0.0, dist);
 
   // warp UVs toward the mouse
@@ -61,10 +61,10 @@ void main() {
   // clamp so we don't sample outside the texture
   warpedUV = clamp(warpedUV, 0.0, 1.0);
 
-  vec4 color = texture2D(uTex, warpedUV);
-  gl_FragColor = color;
+  gl_FragColor = texture2D(uTex, warpedUV);
 }
 `;
+
 
 // ---------- STARS ----------
 let stars = [];
@@ -121,21 +121,56 @@ function setup() {
 
   generateStars();
   setupFixedPlanets();
+  updateBackgroundSize();
+}
+
+function updateBackgroundSize() {
+  if (!bgImg) return;
+
+  const canvasAspect = width / height;
+  const texAspect = bgImg.width / bgImg.height;
+
+  if (canvasAspect > texAspect) {
+    // canvas is wider: match width, expand height
+    bgDrawW = width;
+    bgDrawH = width / texAspect;
+  } else {
+    // canvas is taller: match height, expand width
+    bgDrawH = height;
+    bgDrawW = height * texAspect;
+  }
 }
 
 // ---------- DRAW LOOP ----------
 function draw() {
   background(0);
 
-  // update warp target based on mouse press
-  if (mouseIsPressed) {
-    // mouse in UV (0–1). flip Y for texture coords.
-    lastMouse.x = constrain(mouseX / width, 0.0, 1.0);
-    lastMouse.y = constrain(1.0 - mouseY / height, 0.0, 1.0);
-    targetWarp = 0.35; // how strong the warp feels when pressed
-  } else {
-    targetWarp = 0.0;
+  // // update warp target based on mouse press
+  // if (mouseIsPressed) {
+  //   // mouse in UV (0–1). flip Y for texture coords.
+  //   lastMouse.x = constrain(mouseX / width, 0.0, 1.0);
+  //   lastMouse.y = constrain(1.0 - mouseY / height, 0.0, 1.0);
+  //   targetWarp = 0.35; // how strong the warp feels when pressed
+  // } else {
+  //   targetWarp = 0.0;
+  // }
+if (mouseIsPressed) {
+  // convert mouse from screen coords to UV on the drawn background rect
+  if (bgImg && bgDrawW > 0 && bgDrawH > 0) {
+    let sx = mouseX - width / 2;  // center-based
+    let sy = mouseY - height / 2;
+
+    let u = (sx + bgDrawW / 2) / bgDrawW;
+    let v = (sy + bgDrawH / 2) / bgDrawH;
+
+    lastMouse.x = constrain(u, 0.0, 1.0);
+    lastMouse.y = constrain(v, 0.0, 1.0);
   }
+
+  targetWarp = 0.35;
+} else {
+  targetWarp = 0.0;
+}
 
   // smooth interpolation of warpAmount for a soft animation
   warpAmount = lerp(warpAmount, targetWarp, 0.12);
@@ -170,6 +205,7 @@ function draw() {
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
   resizeFixedPlanets();
+  updateBackgroundSize();
 }
 
 // ---------- STARS ----------
@@ -218,7 +254,6 @@ function drawStars() {
   pop();
 }
 
-// ---------- WARPED BACKGROUND IMAGE ----------
 function drawWarpedBackground() {
   if (!bgImg) return;
 
@@ -226,18 +261,19 @@ function drawWarpedBackground() {
   shader(stickyShader);
 
   stickyShader.setUniform("uTex", bgImg);
-  stickyShader.setUniform("uResolution", [width, height]);
   stickyShader.setUniform("uMouse", [lastMouse.x, lastMouse.y]);
   stickyShader.setUniform("uStrength", warpAmount);
 
   noStroke();
   rectMode(CENTER);
 
-  // full-screen quad in WEBGL
-  rect(0, 0, width, height);
+  // draw using aspect-correct size (covers canvas, may crop a bit)
+  rect(0, 0, bgDrawW, bgDrawH);
 
   pop();
 }
+
+
 
 // ---------- PLANETS (fixed positions + links + names) ----------
 function setupFixedPlanets() {
