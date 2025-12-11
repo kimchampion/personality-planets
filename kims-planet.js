@@ -167,7 +167,7 @@ function draw() {
 
 
 // ---- 2D overlays: ALWAYS LAST ----
-drawingContext.clear(drawingContext.DEPTH_BUFFER_BIT);  // clear depth once for all overlays
+drawingContext.clear(drawingContext.DEPTH_BUFFER_BIT);  // clear depth
 
 // Popup (if any)
 if (selectedImg) {
@@ -372,8 +372,12 @@ function drawInfoBox() {
     "------------------------------------",
     "- Click a cube to open a memory",
     "- Arrow keys, W, A, and SPACE open them also",
-    "- M toggles background music",
+   // "- M toggles background music",
     "- Click empty space to close popup", 
+       "- Click a cube to open a memory",
+    // "- Instructions:",
+    // "- Step 1: Pick up Object",
+    // "- Step 2: Touch the button (ground)"
   ];
 
   push();
