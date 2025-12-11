@@ -85,8 +85,8 @@ const PLANET_NAMES = [
 
 const PLANET_LINKS = [
   "kims-planet.html",             // gold
-  "https://www.csueastbay.edu/",  // orange
-  "https://www.sampyle.com/"      // teal
+  "mishelles-planet.html",  // orange
+  "sams-planet.html"      // teal
 ];
 
 let planets = [];
@@ -510,4 +510,3 @@ function drawHelpText() {
 
   pop();
 }
-
