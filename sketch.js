@@ -1,11 +1,71 @@
+// ---------- IMAGES / FONT ----------
 let bgImg;
+let planetImgs = [];
+let customFont;
+
+// background warp shader
+let stickyShader;
+let warpAmount = 0.0;      // current strength
+let targetWarp = 0.0;      // target strength based on mouse press
+let lastMouse = { x: 0.5, y: 0.5 }; // last mouse position in [0,1] UV space
+
+// ----- SHADER SOURCE (p5 + WebGL ONLY) -----
+const vertSrc = `
+precision mediump float;
+
+attribute vec3 aPosition;
+attribute vec2 aTexCoord;
+
+uniform mat4 uModelViewMatrix;
+uniform mat4 uProjectionMatrix;
+
+varying vec2 vTexCoord;
+
+void main() {
+  vTexCoord = aTexCoord;
+  gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(aPosition, 1.0);
+}
+`;
+
+const fragSrc = `
+precision mediump float;
+
+uniform sampler2D uTex;
+uniform vec2 uResolution;
+uniform vec2 uMouse;     // mouse in UV (0–1), y flipped
+uniform float uStrength; // warp strength
+
+varying vec2 vTexCoord;
+
+void main() {
+  vec2 uv = vTexCoord;
+
+  // direction from pixel to mouse
+  vec2 dir = uMouse - uv;
+  float dist = length(dir);
+
+  // how far the "sticky" region extends (bigger = larger influence)
+  float radius = 0.5;
+
+  // smooth falloff: 1 near mouse, 0 outside radius
+  float influence = smoothstep(radius, 0.0, dist);
+
+  // warp UVs toward the mouse
+  vec2 warpedUV = uv + dir * influence * uStrength;
+
+  // clamp so we don't sample outside the texture
+  warpedUV = clamp(warpedUV, 0.0, 1.0);
+
+  vec4 color = texture2D(uTex, warpedUV);
+  gl_FragColor = color;
+}
+`;
+
+// ---------- STARS ----------
 let stars = [];
 let starCount = 80;
-let planetImgs = [];
-let planets = [];
-let customFont; 
 
-// --- planets info ---
+// ---------- PLANETS ----------
 const PLANET_PATHS = [
   "SpaceBG-04.png", // gold
   "SpaceBG-05.png", // orange
@@ -19,90 +79,99 @@ const PLANET_NAMES = [
 ];
 
 const PLANET_LINKS = [
-  "kims-planet.html", // gold
-  "https://www.csueastbay.edu/", // orange
-  "https://www.sampyle.com/" // blue
+  "kims-planet.html",             // gold
+  "https://www.csueastbay.edu/",  // orange
+  "https://www.sampyle.com/"      // teal
 ];
 
-let hoveredPlanet = null; // hover tracking
+let planets = [];
+let hoveredPlanet = null;
 
-// ANCHORS
+// anchors (fractions of screen)
 const PLANET_ANCHORS = [
   { fx: -0.35, fy: -0.28, size: 0.18, alpha: 220 },
   { fx:  0.00, fy: -0.22, size: 0.20, alpha: 220 },
   { fx:  0.35, fy: -0.30, size: 0.16, alpha: 220 }
 ];
 
+// ---------- PRELOAD ----------
 function preload() {
   bgImg = loadImage("SpaceBG-03.png");
-  for (let p of PLANET_PATHS) planetImgs.push(loadImage(p));
+  for (let p of PLANET_PATHS) {
+    planetImgs.push(loadImage(p));
+  }
 
-  customFont = loadFont("SPACE.ttf"); // NEW (font) — make sure Arial.ttf is in the same folder
+  customFont = loadFont("SPACE.ttf");
 }
 
+// ---------- SETUP ----------
 function setup() {
   createCanvas(windowWidth, windowHeight, WEBGL);
   smooth();
-  textFont(customFont); // NEW (font)
+
+  textFont(customFont);
+
+  // create the sticky warp shader
+  stickyShader = createShader(vertSrc, fragSrc);
+
   generateStars();
   setupFixedPlanets();
 }
 
-// DRAW LOOP
+
 function draw() {
   background(0);
 
-  drawStars();    // background layer
-  drawPlanets();  // middle layer (fixed)
-  drawForegroundImage(); // front layer
+  // update warp target based on mouse press
+  if (mouseIsPressed) {
+    // mouse in UV (0–1). flip Y for texture coords.
+    lastMouse.x = constrain(mouseX / width, 0.0, 1.0);
+    lastMouse.y = constrain(1.0 - mouseY / height, 0.0, 1.0);
+    targetWarp = 0.5; // how strong the warp feels when pressed
+  } else {
+    targetWarp = 0.0;
+  }
 
-  // Hover detection + tooltip
+  // smooth interpolation of warpAmount for a soft animation
+  warpAmount = lerp(warpAmount, targetWarp, 0.12);
+
+  
+  drawStars();            // behind everything
+  drawWarpedBackground(); // astronaut / ground image with sticky warp
+
+  // return to normal p5 rendering for the rest
+  resetShader();
+
+  // MIDDLE + FOREGROUND
+  drawPlanets();
+
+  // hover & cursor logic
   hoveredPlanet = getHoveredPlanet();
-
   if (hoveredPlanet && hoveredPlanet.link) {
     cursor('pointer');
   } else {
     cursor('default');
   }
 
-  if (hoveredPlanet) drawTooltip(hoveredPlanet);
-
-   drawTitle(); 
-}
-
-
-// BG IMAGE
-
-function drawForegroundImage() {
-  if (bgImg) {
-    push();
-    resetMatrix();
-    imageMode(CENTER);
-
-    const imgAspect = bgImg.width / bgImg.height;
-    const winAspect = width / height;
-    let scaledW, scaledH;
-    if (winAspect > imgAspect) {
-      scaledW = width;
-      scaledH = width / imgAspect;
-    } else {
-      scaledH = height;
-      scaledW = height * imgAspect;
-    }
-    image(bgImg, 0, 0, scaledW, scaledH);
-    pop();
+  if (hoveredPlanet) {
+    drawTooltip(hoveredPlanet);
   }
+
+  drawTitle();
 }
 
+// ---------- WINDOW RESIZE ----------
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
   resizeFixedPlanets();
 }
 
-// STARS (slow drift)
+// ---------- STARS ----------
 function generateStars() {
   stars = [];
-  for (let i = 0; i < starCount; i++) stars.push(makeStar());
+  for (let i = 0; i < starCount; i++) {
+    stars.push(makeStar());
+  }
 }
 
 function makeStar() {
@@ -123,7 +192,10 @@ function drawStars() {
   noStroke();
 
   for (let s of stars) {
-    if (s.delay > 0) { s.delay -= 1; continue; }
+    if (s.delay > 0) {
+      s.delay -= 1;
+      continue;
+    }
     fill(255, 255, 255, s.alpha);
     ellipse(s.x, s.y + height / 2, s.size * 2, s.size * 2);
     s.x += s.speed;
@@ -140,8 +212,28 @@ function drawStars() {
   pop();
 }
 
+// ---------- WARPED BACKGROUND IMAGE ----------
+function drawWarpedBackground() {
+  if (!bgImg) return;
 
-// PLANETS (fixed positions + links + names)
+  push();
+  shader(stickyShader);
+
+  stickyShader.setUniform("uTex", bgImg);
+  stickyShader.setUniform("uResolution", [width, height]);
+  stickyShader.setUniform("uMouse", [lastMouse.x, lastMouse.y]);
+  stickyShader.setUniform("uStrength", warpAmount);
+
+  noStroke();
+  rectMode(CENTER);
+
+  // full-screen quad in WEBGL
+  rect(0, 0, width, height);
+
+  pop();
+}
+
+// ---------- PLANETS (fixed positions + links + names) ----------
 function setupFixedPlanets() {
   planets = [];
   const minDim = min(width, height);
@@ -169,11 +261,13 @@ function drawPlanets() {
   push();
   resetMatrix();
   imageMode(CENTER);
+
   for (let p of planets) {
     tint(255, p.alpha);
     image(p.img, p.cx, p.cy, p.w, p.h);
   }
   noTint();
+
   pop();
 }
 
@@ -188,7 +282,7 @@ function resizeFixedPlanets() {
   }
 }
 
-// INTERACTION
+// ---------- INTERACTION ----------
 function getHoveredPlanet() {
   const mx = mouseX - width / 2;
   const my = mouseY - height / 2;
@@ -204,22 +298,25 @@ function getHoveredPlanet() {
 
 function mousePressed() {
   const p = getHoveredPlanet();
-  if (p && p.link) window.open(p.link, '_self', 'noopener,noreferrer');
+  if (p && p.link) {
+    window.open(p.link, "_self", "noopener,noreferrer");
+  }
 }
 
-
-// TOOLTIP
+// ---------- TOOLTIP ----------
 function drawTooltip(p) {
   push();
   resetMatrix();
-  textFont(customFont);  
+  textFont(customFont);
   textSize(14);
+
   const padding = 8;
   const offsetY = -(p.h * 0.55) - 10;
   const label = p.name;
   const tw = textWidth(label);
   const boxW = tw + padding * 2;
   const boxH = 24;
+
   let tx = p.cx;
   let ty = p.cy + offsetY;
 
@@ -236,22 +333,24 @@ function drawTooltip(p) {
   fill(255);
   textAlign(CENTER, CENTER);
   text(label, tx, ty + 1);
+
   pop();
 }
-// PP title
-function drawTitle() { 
+
+// ---------- TITLE ----------
+function drawTitle() {
   push();
-  resetMatrix();           
-  textFont(customFont);     
+  resetMatrix();
+  textFont(customFont);
   textAlign(CENTER, TOP);
-  
-  const size = max(20, min(width, height) * 0.04); 
-  textSize(size);         
-  const margin = 10;       
+
+  const size = max(20, min(width, height) * 0.04);
+  textSize(size);
+  const margin = 10;
   const label = "Welcome Traveler";
 
-  fill(255);               
-  text(label, 0, -height/2 + margin + 4); 
+  fill(255);
+  text(label, 0, -height / 2 + margin + 4);
+
   pop();
 }
-
