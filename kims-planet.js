@@ -1,6 +1,6 @@
 let bgMusic;  // background music
 let obj0, obj1, obj2, obj3, obj4, obj5, obj6;
-let sndObj0, sndObj1, sndObj2, sndObj3, sndObj5, sndObj4, sndObj6;
+let sndObj0, sndObj1, sndObj2, sndObj3, sndObj5, sndObj4, sndObj6, sndObj7;
 
 let cubes = [];
 let selectedImg = null; 
@@ -33,7 +33,8 @@ function preload() {
   obj3 = loadImage('assets/obj3.jpg'); 
   obj4 = loadImage('assets/obj4.jpg');
   obj5 = loadImage('assets/obj5.jpg');
-  obj6 = loadImage('assets/obj6.jpg');
+  obj6 = loadImage('assets/obj3.jpg');
+  obj7 = loadImage('assets/obj7.jpg');
 
   sndObj0 = loadSound('assets/sound0.m4a');
   sndObj1 = loadSound('assets/sound1.m4a'); 
@@ -42,6 +43,7 @@ function preload() {
   sndObj4 = loadSound('assets/sound4.m4a');
   sndObj5 = loadSound('assets/sound5.m4a');
   sndObj6 = loadSound('assets/sound6.m4a');
+  sndObj7 = loadSound('assets/sound7.m4a');
 
   bgMusic = loadSound('assets/background.m4a');
 }
@@ -321,11 +323,11 @@ function buildCubes() {
     //{ img: obj4,    snd: sndObj4, pos: createVector( 200, 125, 0) }, //kim
     { img: obj4,    snd: sndObj4, pos: createVector( 0.25 * w * s, 0.21 * h * s, 0) }, //kim
 
-    //{ img: obj5,    snd: sndObj5, pos: createVector(-320, -65, 0) }, //tavia
-    { img: obj5,    snd: sndObj5, pos: createVector(-0.4 * w * s, -0.11 * h * s, 0) }, //tavia
+    //{ img: obj5,    snd: sndObj5, pos: createVector(-320, -65, 0) }, //jessie
+    { img: obj5,    snd: sndObj5, pos: createVector(-0.4 * w * s, -0.11 * h * s, 0) }, //jessie
  
    //{ img: obj6,    snd: sndObj6, pos: createVector( 320, -65, 0) } //tommy
-    { img: obj6,    snd: sndObj3, pos: createVector( 0.4 * w * s, -0.11 * h * s, 0) } //tommy
+    { img: obj7,    snd: sndObj7, pos: createVector( 0.4 * w * s, -0.11 * h * s, 0) } //tommy
   ];
 }
 
@@ -418,7 +420,7 @@ function drawInfoBox() {
 }
 
 function stopAllObjectSounds() {
-  let all = [sndObj0, sndObj1, sndObj2, sndObj3, sndObj4, sndObj5, sndObj6];
+  let all = [sndObj0, sndObj1, sndObj2, sndObj3, sndObj4, sndObj5, sndObj6, sndObj7];
   for (let s of all) {
     if (s && s.isPlaying()) {
       s.stop();
