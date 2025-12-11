@@ -21,10 +21,10 @@ function preload() {
 
   uiFont = loadFont("assets/Arial.ttf"); 
 
-  planetTexture = loadImage("assets/planet1.jpg"); 
-  planetTexture1 = loadImage("assets/planet2.jpg"); 
-  planetTexture2 = loadImage("assets/planet3.jpg"); 
-  planetTexture3 = loadImage("assets/planet4.jpg");   
+  planetTexture = loadImage("assets/planet-kim1.jpg"); 
+  planetTexture1 = loadImage("assets/planet-kim2.jpg"); 
+  planetTexture2 = loadImage("assets/planet-kim3.jpg"); 
+  planetTexture3 = loadImage("assets/planet-kim4.jpg");   
 
   obj0 = loadImage('assets/obj0.jpg');
   obj1 = loadImage('assets/obj1.jpg'); 
@@ -67,9 +67,36 @@ function setup() {
   let butW  = width * .9;    
   let bx = width - butW - pad;
 
-  let bttn = createButton("⬅ Back to Landing");
+  let bttn = createButton("Back");
   bttn.position(bx,pad);
-  bttn.mousePressed(redirect);
+
+  bttn.position(20, 20);                  
+  bttn.style("padding", "10px 22px");
+  bttn.style("font-size", "20px");
+  bttn.style("background", "#222");
+  bttn.style("color", "white");
+  bttn.style("border", "2px solid #555");
+  bttn.style("border-radius", "8px");
+  bttn.style("cursor", "pointer");
+  bttn.style("z-index", "9999");
+  bttn.style("transition", "all 0.2s ease");
+  bttn.style("font-family", "spaceFont"); // CSS family name, optional
+
+  // Hover effect for Back button
+  bttn.mouseOver(() => {
+    bttn.style("background", "#444");
+    bttn.style("transform", "scale(1.1)");
+    bttn.style("border", "2px solid white");
+  });
+
+  bttn.mouseOut(() => {
+    bttn.style("background", "#222");
+    bttn.style("transform", "scale(1.0)");
+    bttn.style("border", "2px solid #555");
+  });
+
+
+   bttn.mousePressed(redirect);
 }
 
 function windowResized() {
@@ -167,7 +194,7 @@ function draw() {
 
 
 // ---- 2D overlays: ALWAYS LAST ----
-drawingContext.clear(drawingContext.DEPTH_BUFFER_BIT);  // clear depth
+drawingContext.clear(drawingContext.DEPTH_BUFFER_BIT);  // clear depth once for all overlays
 
 // Popup (if any)
 if (selectedImg) {
@@ -372,12 +399,8 @@ function drawInfoBox() {
     "------------------------------------",
     "- Click a cube to open a memory",
     "- Arrow keys, W, A, and SPACE open them also",
-   // "- M toggles background music",
+    "- M toggles background music",
     "- Click empty space to close popup", 
-       "- Click a cube to open a memory",
-    // "- Instructions:",
-    // "- Step 1: Pick up Object",
-    // "- Step 2: Touch the button (ground)"
   ];
 
   push();
@@ -426,7 +449,7 @@ function drawInfoBox() {
 }
 
 function redirect(){
-  window.location.href = "https://kimchampion.github.io/personality-planets/";
+  window.location.href = "./"; // go back to the landing page
 }
 
 function stopAllObjectSounds() {
