@@ -303,12 +303,12 @@ function draw() {
     // tooltip text
     fill(255);
     textFont(spaceFont);
-    textSize(16);
+    textSize(14);
     text("Planet: S", 12, 24);
     text("Type: Water ", 12, 44);
     text("Eco: Friendly ", 12, 64);
     text("Moon: Heat Map ", 12, 84);
-
+    text("Atmosphere: Adaptive", 12, 104);
 
     pop();
 
