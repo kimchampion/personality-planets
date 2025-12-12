@@ -46,6 +46,10 @@ let backButton;
 // hovering planet
 let planetHovered = false;
 
+let astronautScreenPos = null;    // NEW: { x, y } position in screen space
+let astronautClickableSize = 0;   // NEW: radius in pixels
+
+
 function preload() {
   planetTexture = loadImage("assets/planet-samB3.jpg");
   moonTexture   = loadImage("assets/planet-samR.jpg");
@@ -241,9 +245,9 @@ function draw() {
 
 
   // ASTRONAUT
+ let bobOffset = sin(frameCount * 0.02) * 20;
+  
   push();
-  let bobOffset = sin(frameCount * 0.02) * 20;
-
   translate(
     0,
     -planetRadius * 2.5 + bobOffset,
@@ -278,6 +282,41 @@ function draw() {
 
   // 2D OVERLAY FOR TEXT
   resetMatrix(); 
+  // NEW: compute astronaut screen position so bounding box follows motion
+  {
+    // astronaut’s local position in world space (before global rotation)
+    let ax = 0;
+    let ay = -planetRadius * 2.5 + bobOffset;
+    let az = -planetRadius * 0.25;
+
+    // apply same scene rotation: rotateX(angleX), then rotateY(angleY)
+    let cosX = cos(angleX);
+    let sinX = sin(angleX);
+    let y1 = ay * cosX - az * sinX;
+    let z1 = ay * sinX + az * cosX;
+    let x1 = ax;
+
+    let cosY = cos(angleY);
+    let sinY = sin(angleY);
+    let x2 = x1 * cosY + z1 * sinY;
+    let z2 = -x1 * sinY + z1 * cosY;
+    let y2 = y1;
+
+    // apply zoom translation on z
+    z2 += zoom;
+
+    // approximate projection to screen coordinates
+    astronautScreenPos = {
+      x: width / 2 + x2,
+      y: height / 2 + y2
+    };
+
+    // clickable radius scales with planet size & zoom
+    let zoomScale2D = 1 / (1 - zoom / 1000);
+    zoomScale2D = constrain(zoomScale2D, 0.3, 3.0);
+    astronautClickableSize = planetRadius * 0.9 * zoomScale2D;
+  }
+  // END NEW astronaut screen-position block
 
   // TOOLTIP for planet hover
   if (planetHovered && !isDragging) {                
@@ -327,6 +366,19 @@ function draw() {
 
 // INTERACTION MOVEMENTS
 function mousePressed() {
+// NEW: click on astronaut opens a link instead of dragging
+  if (astronautScreenPos) {
+    const dx = mouseX - astronautScreenPos.x;
+    const dy = mouseY - astronautScreenPos.y;
+    const r = astronautClickableSize * 0.6; // hit radius a bit smaller than visual
+
+    if (dx * dx + dy * dy <= r * r) {
+      // CHANGE THIS URL to the astronaut destination you want
+      window.location.href = "https://www.sampyle.com/";
+      return; // don't start dragging if we clicked the astronaut
+    }
+  }
+  
   isDragging = true;
   previousMouseX = mouseX;
   previousMouseY = mouseY;
