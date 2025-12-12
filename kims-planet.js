@@ -10,8 +10,8 @@ let uiFont;
 
 // starfield data
 let stars = [];
-
-let cubeDistanceScale = 0.7; // 1.0 = current distance, 0.6 = closer
+// 1.0 = current distance, 0.6 = closer
+let cubeDistanceScale = 0.7; 
 let planetRadius = 150;
 let cubeSize = 75;
 
@@ -51,11 +51,12 @@ function preload() {
 function setup() {
   createCanvas(windowWidth, windowHeight, WEBGL);
   smooth();
-  updateSizesForWindow(); // make sizes depend on window
+  // make sizes depend on window
+  updateSizesForWindow(); 
   buildCubes();
   textFont(uiFont);
 
-    // generate stars
+    // generate stars in random positions
   for (let i = 0; i < 400; i++) {
     stars.push({
       x: random(-2000, 2000),
@@ -64,7 +65,7 @@ function setup() {
     });
   }
 
-  //x,y,buttonText, redirect
+  //x, y, buttonText, redirect home page
   let bttn = new Button(20,20,"Back","./");
   bttn.show();
 }
@@ -78,7 +79,7 @@ function windowResized() {
 function draw() {
   background(0);
 
-  /* --starfield-- */ 
+  /* starfield */ 
   push();
   noStroke();
   noLights();
@@ -115,7 +116,7 @@ function draw() {
     pop();
   }
 
-  //planet1
+    //planet1
      push();
      rotateY(angle * 1.3);
      noStroke();
@@ -152,7 +153,7 @@ function draw() {
      sphere(50);
      pop();   
 
-  //planet3
+    //planet3
      push();
      rotateY(angle * 1.3);
      rotateZ(angle * 1.0);
@@ -163,26 +164,24 @@ function draw() {
      pop();  
 
 
-// ---- 2D overlays: ALWAYS LAST ----
-drawingContext.clear(drawingContext.DEPTH_BUFFER_BIT);  // clear depth once for all overlays
+// clear depth, the z values in buffer
+drawingContext.clear(drawingContext.DEPTH_BUFFER_BIT); 
 
-// Popup (if any)
+// open popup 
 if (selectedImg) {
   drawImagePopup(selectedImg);
 }
 
-// Info box (always on top-right)
+// info box (always on top-right)
 drawInfoBox();
-
 }
 
+//code to for click positing on cubes from chatgpt
 function mousePressed() {
   let mx = mouseX - width / 2;
   let my = mouseY - height / 2;
-
   let halfX = cubeSize * 0.5;
   let halfY = cubeSize * 0.8; // a little taller to make clicking easier when tilted
-
   let hitIndex = -1;
 
   for (let i = 0; i < cubes.length; i++) {
@@ -204,19 +203,15 @@ function mousePressed() {
 }
 
 function openPopupFor(idx) {
-  if (idx < 0 || idx >= cubes.length) return;
+  if (idx < 0 || idx >= cubes.length) 
+    return;
 
   stopAllObjectSounds();
   
-  let c = cubes[idx];
+  let cube = cubes[idx];
 
-  selectedImg = c.img;
-  selectedSound = c.snd;
-
-  // if (selectedSound && selectedSound.isPlaying()) {
-  //   selectedSound.stop();
-  // }
-
+  selectedImg = cube.img;
+  selectedSound = cube.snd;
 
   if (selectedSound) {
     let thisSound = selectedSound;
@@ -228,7 +223,6 @@ function openPopupFor(idx) {
         closePopupFromSound();
       }
     });
-
     thisSound.play();
   }
 }
@@ -244,7 +238,6 @@ function closePopupFromSound() {
   selectedSound = null;
 }
 
-
 function drawImagePopup(img) {
   
   push();
@@ -252,43 +245,33 @@ function drawImagePopup(img) {
   translate(-width / 2, -height / 2);
 
   let pad = 12;
-
-  // let winW = width * 0.3;
-  // let winH = height * 0.25;
   let winW = width * 0.7;
   let winH = height * 0.6;
-  let x = width * 0.03;
-  let y = height * 0.03;
+  let xPos = width * 0.03;
+  let yPos = height * 0.03;
 
   noStroke();
   fill(0,200);
-  rect(x, y, winW, winH, 10);
+  rect(xPos, yPos, winW, winH, 10);
 
-  // fill(255,230);
-  // rect(x,y,winW, 26, 10,10,0,0);
-  // fill(0);
-  // textSize(12);
-  // textStyle(BOLD);
-  // text('memory (click empty space to close)', x + 8, y + 17);
-
-  let cx = x + pad;
-  let cy = y + 26 + pad;
-  let cw = winW - pad * 2;
-  let ch = winH - 26 - pad * 2;
+  let xCube = xPos + pad;
+  let yCube = yPos + 26 + pad;
+  let wCube = winW - pad * 2;
+  let hCube = winH - 26 - pad * 2;
 
   let imgRatio = img.width / img.height;
-  let boxRatio = cw / ch;
+  let boxRatio = wCube / hCube;
 
-  let dw = cw;
-  let dh = ch;
+  let dw = wCube;
+  let dh = hCube;
   if (imgRatio > boxRatio) {
     dh = dw / imgRatio;
   } else {
     dw = dh * imgRatio;
   }
 
-  let ix = cx + (cw - dw) / 2;
-  let iy = cy + (ch - dh) / 2;
+  let ix = xCube + (wCube - dw) / 2;
+  let iy = yCube + (hCube - dh) / 2;
 
   image(img, ix, iy, dw, dh);
   pop();
@@ -296,8 +279,8 @@ function drawImagePopup(img) {
 
 function updateSizesForWindow() {
   const base = min(windowWidth, windowHeight);
-
-  planetRadius = base * 0.15;  // 15% of min dimension
+  //set planet radius to 15% of base
+  planetRadius = base * 0.15;  
   cubeSize = base * 0.09;
 }
 
@@ -352,12 +335,6 @@ function keyPressed() {
   if (key === ' ')                { openPopupFor(3); return; }
   if (key === 'W' || key === 'w') { openPopupFor(4); return; }
   if (key === 'A' || key === 'a') { openPopupFor(6); return; }
-
-  if (key === 'M' || key === 'm') {
-    bgMusic.pause();
-  } else {
-    bgMusic.loop
-  }
 }
 
 function drawInfoBox() {
@@ -373,21 +350,17 @@ function drawInfoBox() {
   ];
 
   push();
-  resetMatrix(); // go to 2D screen coords
+  //change to two dimensional coords
+  resetMatrix(); 
   translate(-width / 2, -height / 2);
 
   // Responsive sizes based on window
   let base = min(width, height);
   let pad   = base * 0.025;       
-  let winW  = width  * 0.3;
-                
-  //let winH  = height * 0.27;   
+  let winW  = width  * 0.3; 
   let lineCount = infoLines.length;
   let lineH = base * 0.025;
-
   let winH =  pad + (lineCount * lineH) + pad;                
-  
-  // top-right
   let x = width  - winW  - pad;
   let y = pad;
 
@@ -396,7 +369,7 @@ function drawInfoBox() {
   // Background box
   noStroke();
   //fill(255, 0, 0, 110);  
-   fill(0, 0, 0, 80);                       
+  fill(0, 0, 0, 80);                       
   rect(x, y, winW, winH, 12);
 
   fill(255);
