@@ -7,6 +7,7 @@ let selectedImg = null;
 let selectedSound = null;
 let angle = 0;
 let uiFont;
+let spaceFont;
 
 // starfield data
 let stars = [];
