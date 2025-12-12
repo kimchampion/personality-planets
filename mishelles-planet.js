@@ -1,17 +1,12 @@
 let globeTexture;
-
 let laptopScreenImg;
-
 let worldMusic;
-
-
+let uiFont;
+let spaceFont;
 
 let stars = [];
-
 let panelTextures = [];
-
 let dataPanelTextures = [];
-
 
 let introMessages = [
   "welcome to mishelle's world!",
@@ -21,9 +16,6 @@ let introMessages = [
 
 let introIndex = 0;
 let showingIntro = false;
-
-
-
 
 const groundSize = 8000;  // must match the plane size in scene 1
 
@@ -36,8 +28,6 @@ let camDist1 = 900;        // starting zoom distance in scene 1
 const minCamDist1 = 500;   // how close you can zoom in
 const maxCamDist1 = 1800;  // how far you can zoom out
   // ✨ new safe zoom limit (40% of ground size)
-
-
 
 let yawAngle = 0;   // camera rotation controlled by keys in scene 1
 
@@ -55,10 +45,13 @@ function preload() {
 
   soundFormats('mp3', 'ogg'); // optional but safe
 
-worldMusic = loadSound('assets/walle.mp3'); 
+  worldMusic = loadSound('assets/walle.mp3'); 
 
     // image for laptop screen (you can change this to any image you want)
   laptopScreenImg = loadImage('assets/laptopscreen.jpg');
+
+  uiFont        = loadFont("assets/Arial.ttf");
+  spaceFont     = loadFont("SPACE.ttf"); 
 
   // one image per panel, change these names to match your files
   panelTextures = [
@@ -103,19 +96,23 @@ function setup() {
       z: random(-2000, 2000)
     });
   }
+
+  //button: x,y,buttonText, redirect
+  let bttn = new Button(20, 20, "Back", "./"); //go back to the landing page
+  bttn.show();
 }
 
 function draw() {
+
+
   if (scene === 0) {
     drawSpaceScene();
+ 
   } else if (scene === 1) {
     drawOnPlanetScene();
+   
   }
 }
-
-/* ----------------------
-   SCENE 0: SPACE VIEW
----------------------- */
 
 function drawSpaceScene() {
   background(0);
@@ -137,9 +134,11 @@ function drawSpaceScene() {
   fill(255);
   textAlign(LEFT, TOP);
   textSize(20);
-  text("SPACE VIEW", 20, 20);
+  textFont(spaceFont);
+  text("SPACE VIEW", 200, 50);
   textSize(14);
-  text("Click the planet to go down to the surface", 20, 45);
+    textFont(uiFont);
+  text("Click the planet to go down to the surface", 200, 95);
 
   push();
 resetMatrix();
@@ -169,27 +168,24 @@ drawingContext.disable(drawingContext.DEPTH_TEST);
 
 // position + size
 let backX = 60;   // center X of circle
-let backY = 100;  // center Y of circle
+let backY = 150;  // center Y of circle
 let backR = 40;   // radius (circle size)
 
 // button circle
 fill(255, 200, 255);   // pink purple
 ellipse(backX, backY, backR * 2, backR * 2);
 
-// label
-fill(0);               // black text
-textAlign(CENTER, CENTER);
-textSize(18);
-text("Back", backX, backY);
+// // label
+// fill(0);               // black text
+// textAlign(CENTER, CENTER);
+// textSize(18);
+// text("", backX, backY);
 
 // re-enable depth
 drawingContext.enable(drawingContext.DEPTH_TEST);
 
 pop();
 }
-
-
-
 
 function drawSpacePlanet() {
   if (!globeTexture) return;
@@ -238,10 +234,6 @@ function drawStars() {
 
   pop();
 }
-
-/* ----------------------
-   SCENE 1: ON PLANET
----------------------- */
 
 function drawOnPlanetScene() {
   background(10, 5, 25); // dark sky
@@ -348,15 +340,15 @@ function drawOnPlanetScene() {
   noStroke();
   fill(255);
   textSize(24);
-  text("ON THE PLANET", 20, 40);
+  textFont(spaceFont);
+  text("ON THE PLANET", 20, -130);
   textSize(16);
-  text("Move mouse left/right to look", 20, 70);
-  text("W/S or ↑/↓ to walk, A/D or ←/→ to strafe", 20, 95);
-  text("Press 'B' to go back to space", 20, 120);
+  textFont(uiFont);
+  text("Move mouse left/right to look", 20, -95);
+  text("W/S or ↑/↓ to walk, A/D or ←/→ to strafe", 20, -75);
+  text("Press 'B' to go back to space", 20, -55);
 
 }
-
-
 
 function drawDesk() {
   push();
@@ -544,7 +536,6 @@ function drawDataEnclosure() {
 const x = centerX - cos(angle) * radius;
 const z = centerZ + sin(angle) * radius;
 
-
     push();
     translate(x, baseY - panelHeight / 2, z);
 
@@ -566,11 +557,6 @@ const z = centerZ + sin(angle) * radius;
 
   pop();
 }
-
-
-
-
-
 
 function drawPlanetStructures() {
   push();
@@ -620,7 +606,7 @@ function mousePressed() {
       // scene = 1;   // or 2 or whatever you like
 
       // Option B: go to another webpage
-      window.location.href = "https://mtlenz.github.io/PlanetsLandingPage/";
+      window.location.href = "./";
 
       return;
     }
@@ -673,5 +659,3 @@ function mouseWheel(event) {
 
   return false; // prevents page from scrolling
 }
-
-
