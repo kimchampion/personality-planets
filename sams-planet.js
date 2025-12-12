@@ -46,8 +46,9 @@ let backButton;
 // hovering planet
 let planetHovered = false;
 
-let astronautScreenPos = null;    // NEW: { x, y } position in screen space
-let astronautClickableSize = 0;   // NEW: radius in pixels
+let astronautScreenPos = null;    
+let astronautClickableSize = 0;  
+let bgMusic; 
 
 
 function preload() {
@@ -55,12 +56,19 @@ function preload() {
   moonTexture   = loadImage("assets/planet-samR.jpg");
   astronautImg  = loadImage("assets/astronaut.png");
   spaceFont     = loadFont("SPACE.ttf");
+  bgMusic = loadSound("Interstellar.mp3"); 
 }
 
 function setup() {
   createCanvas(windowWidth, windowHeight, WEBGL);
   smooth();
   updateSizesForWindow();
+
+  //start background music 
+  if (bgMusic) {                   
+    bgMusic.setVolume(0.5);        
+    bgMusic.loop();                
+  }
 
   // Back btn
   backButton = createButton("Back");
