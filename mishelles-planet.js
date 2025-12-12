@@ -1,7 +1,15 @@
 let globeTexture;
+
 let laptopScreenImg;
+
+let worldMusic;
+
+
+
 let stars = [];
+
 let panelTextures = [];
+
 let dataPanelTextures = [];
 
 
@@ -13,6 +21,8 @@ let introMessages = [
 
 let introIndex = 0;
 let showingIntro = false;
+
+
 
 
 const groundSize = 8000;  // must match the plane size in scene 1
@@ -43,11 +53,12 @@ function preload() {
   
   globeTexture = loadImage('assets/pastelplanet.jpg');
 
+  soundFormats('mp3', 'ogg'); // optional but safe
+
+worldMusic = loadSound('assets/walle.mp3'); 
+
     // image for laptop screen (you can change this to any image you want)
   laptopScreenImg = loadImage('assets/laptopscreen.jpg');
-
-  uiFont        = loadFont("assets/Arial.ttf");
-  spaceFont     = loadFont("SPACE.ttf"); 
 
   // one image per panel, change these names to match your files
   panelTextures = [
@@ -73,6 +84,13 @@ function preload() {
 
 function setup() {
   createCanvas(windowWidth, windowHeight, WEBGL);
+
+    userStartAudio().then(() => {
+    if (worldMusic && !worldMusic.isPlaying()) {
+      worldMusic.loop();
+      worldMusic.setVolume(0.5);
+    }
+  });
   textureMode(NORMAL);
   textureWrap(REPEAT, REPEAT);
 
@@ -85,24 +103,19 @@ function setup() {
       z: random(-2000, 2000)
     });
   }
-  
- //button: x,y,buttonText, redirect
-  let bttn = new Button(20, 20, "Back", "./"); //go back to the landing page
-  bttn.show();
 }
 
 function draw() {
   if (scene === 0) {
     drawSpaceScene();
-    drawInfoBoxSpace();
-
   } else if (scene === 1) {
     drawOnPlanetScene();
-    drawInfoBoxPlanet();
   }
-
 }
 
+/* ----------------------
+   SCENE 0: SPACE VIEW
+---------------------- */
 
 function drawSpaceScene() {
   background(0);
@@ -629,6 +642,10 @@ function mousePressed() {
 }
 
 
+
+
+
+
 function keyPressed() {
   if (key === '1') {
     scene = 0; // SPACE VIEW
@@ -657,110 +674,4 @@ function mouseWheel(event) {
   return false; // prevents page from scrolling
 }
 
-function drawInfoBoxSpace() {
 
-  let infoLines = [
-    "\n",
-    "Click on the large pink planet",
-    "to explore my world"
-  ];
-
-  push();
-  resetMatrix(); // go to 2D screen coords
-  translate(-width / 2, -height / 2);
-
-  // Responsive sizes based on window
-  let base = min(width, height);
-  let pad   = base * 0.025;       
-  let winW  = width  * 0.3;
-                
-  //let winH  = height * 0.27;   
-  let lineCount = infoLines.length;
-  let lineH = base * 0.025;
-
-  let winH =  pad + (lineCount * lineH) + pad;                
-  
-  // top-right
-  let x = width  - winW  - pad;
-  let y = pad;
-
-  // Background box
-  noStroke();
-  //fill(255, 0, 0, 110);  
-   fill(0, 0, 0, 80);                       
-  rect(x, y, winW, winH, 12);
-
-  fill(255);
-  textAlign(LEFT, TOP);
-  
-  let textX = x + pad;
-  let textY = y+ pad;
-
-  textSize(base * 0.03);
-  textFont(spaceFont);
-  text("M Planet", textX, textY);
-
-  textSize(base * 0.02);
-  textFont(uiFont);
-  textY = textY + 30;
-
-  for (let i = 0; i < infoLines.length; i++) {
-    text(infoLines[i], textX, textY + i * lineH);
-  }
-  pop();
-}
-
-function drawInfoBoxPlanet() {
-
-  let infoLines = [
-    "\n",
-    "Use arrow keys to navigate",
-    " - Press Q to rotate left ", 
-    " - Press E to rotate right ", 
-    " - Press B to exit to main planet"
-  ];
-
-  push();
-  resetMatrix(); // go to 2D screen coords
-  translate(-width / 2, -height);
-
-  // Responsive sizes based on window
-  let base = min(width, height);
-  let pad   = base * 0.025;       
-  let winW  = width  * 0.3;
-                
-  //let winH  = height * 0.27;   
-  let lineCount = infoLines.length;
-  let lineH = base * 0.025;
-
-  let winH =  pad + (lineCount * lineH) + pad;                
-  
-  // top-right
-  let x = width  - winW  - pad;
-  let y = pad;
-
-  // Background box
-  noStroke();
-  //fill(255, 0, 0, 110);  
-   fill(0, 0, 0, 100);                       
-  rect(x, y, winW, winH, 12);
-
-  fill(255);
-  textAlign(LEFT, TOP);
-  
-  let textX = x + pad;
-  let textY = y+ pad;
-
-  textSize(base * 0.03);
-  textFont(spaceFont);
-  text("M Planet", textX, textY);
-
-  textSize(base * 0.02);
-  textFont(uiFont);
-  textY = textY + 30;
-
-  for (let i = 0; i < infoLines.length; i++) {
-    text(infoLines[i], textX, textY + i * lineH);
-  }
-  pop();
-}
